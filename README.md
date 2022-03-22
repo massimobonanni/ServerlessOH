@@ -1,4 +1,4 @@
-Introduction 
+# Introduction 
 This is a sample implementation of the code for Microsoft Serverless OpenHack
 
 ## Challenge 3
