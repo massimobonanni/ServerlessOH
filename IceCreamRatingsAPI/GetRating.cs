@@ -17,7 +17,7 @@ namespace BFYOC.Functions
     {
         [FunctionName("GetRating")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "ratings/{id}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get",  Route = "ratings/{id}")] HttpRequest req,
             string id,
             [CosmosDB(
                 databaseName: CosmosDBNames.DatabaseName,
