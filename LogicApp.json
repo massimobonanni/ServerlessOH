@@ -1,0 +1,207 @@
+{
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "actions": {
+      "For_each": {
+        "actions": {
+          "Send_an_email_(V2)": {
+            "inputs": {
+              "body": {
+                "Body": "<p>@{variables('EmailHTMLBody')}</p>",
+                "Subject": "TEST OH SERVERLESS PRODUCT LIST",
+                "To": "@items('For_each')?['emailaddress1']"
+              },
+              "host": {
+                "connection": {
+                  "name": "@parameters('$connections')['office365']['connectionId']"
+                }
+              },
+              "method": "post",
+              "path": "/v2/Mail"
+            },
+            "runAfter": {},
+            "type": "ApiConnection"
+          }
+        },
+        "foreach": "@body('List_records_(deprecated)')?['value']",
+        "runAfter": {
+          "Initialize_variable_2": [
+            "Succeeded"
+          ]
+        },
+        "type": "Foreach"
+      },
+      "GetProducts_HTTP_Call": {
+        "inputs": {
+          "method": "GET",
+          "uri": "https://serverlessohapi.azurewebsites.net/api/GetProducts"
+        },
+        "runAfter": {
+          "Initialize_InnerHTMLTable_variable": [
+            "Succeeded"
+          ]
+        },
+        "type": "Http"
+      },
+      "Initialize_InnerHTMLTable_variable": {
+        "inputs": {
+          "variables": [
+            {
+              "name": "InnerHTMLTable",
+              "type": "string"
+            }
+          ]
+        },
+        "runAfter": {
+          "Initialize_variable": [
+            "Succeeded"
+          ]
+        },
+        "type": "InitializeVariable"
+      },
+      "Initialize_variable": {
+        "inputs": {
+          "variables": [
+            {
+              "name": "Contacts",
+              "type": "array"
+            }
+          ]
+        },
+        "runAfter": {
+          "List_records_(deprecated)": [
+            "Succeeded"
+          ]
+        },
+        "type": "InitializeVariable"
+      },
+      "Initialize_variable_2": {
+        "inputs": {
+          "variables": [
+            {
+              "name": "EmailHTMLBody",
+              "type": "string",
+              "value": "<!DOCTYPE html>\n<html>\n<body style=\"background-color: whitesmoke; color: #454545; font-family:'Gill Sans',\n 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; padding-bottom: 3em;\">\n  <table style=\"width:100%; color:#454545\">\n    <tr>\n      <td style=\"width:11em;\">\n        <img style=\"margin-left:1em;\"\n        src=\"https://serverlessoh.azureedge.net/public/ice-cream-2202561_320-circle.jpg\"\n          height=\"160\" width=\"160\" alt=\"Fruit Ice Cream\">\n      </td>\n      <td>\n        <p style=\"font-style: italic; font-size: 50px;\n        font-weight:600; margin-left: 1em;\">Best For You Organics</p>\n      </td>\n    </tr>\n  </table>\n  <p style=\"text-align: center; font-style: italic; font-size:\n  80px;\">New Ice Cream Line!</p>\n  <p style=\"margin:2em 0em; font-size: 20px; text-align: center;\">\n  Best For You Organics have a new line of fruit flavored ice creams.\n  Below is the information so you can start the ordering process:\n  </p>\n  <table style=\"width:100%; border-top: 1px solid #454545;\n  border-bottom: 1px solid #454545; color:#454545; padding: 1em; font-size: 20px;\">\n    <thead>\n      <tr>\n        <th style=\"padding-bottom: 1em;\" align=\"left\">Ice Cream</th>\n        <th style=\"padding-bottom: 1em;\" align=\"left\">Description</th>\n        <th style=\"padding-bottom: 1em;\" align=\"left\">Product ID</th>\n      </tr>\n    </thead>\n    <tbody style=\"font-size: 16px;\">\n @{variables('InnerHTMLTable')}\n    </tbody>\n  </table>\n  <p style=\"text-align: center; margin-top: 3em;font-size: 20px;\">Please contact\n  your representative at Best For You Organics to get more information..</p>\n</body>\n</html>"
+            }
+          ]
+        },
+        "runAfter": {
+          "Iterate_on_products": [
+            "Succeeded"
+          ]
+        },
+        "type": "InitializeVariable"
+      },
+      "Iterate_on_products": {
+        "actions": {
+          "Append_to_string_variable": {
+            "inputs": {
+              "name": "InnerHTMLTable",
+              "value": "<tr><td>@{items('Iterate_on_products')['productName']}</td><td>@{items('Iterate_on_products')['productDescription']}</td><td>@{items('Iterate_on_products')['productId']}</td></tr>"
+            },
+            "runAfter": {},
+            "type": "AppendToStringVariable"
+          }
+        },
+        "foreach": "@body('Parse_JSON')",
+        "runAfter": {
+          "Parse_JSON": [
+            "Succeeded"
+          ]
+        },
+        "type": "Foreach"
+      },
+      "List_records_(deprecated)": {
+        "inputs": {
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['dynamicscrmonline']['connectionId']"
+            }
+          },
+          "method": "get",
+          "path": "/datasets/@{encodeURIComponent(encodeURIComponent('org01c23854.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('contacts'))}/items"
+        },
+        "runAfter": {},
+        "type": "ApiConnection"
+      },
+      "Parse_JSON": {
+        "inputs": {
+          "content": "@body('GetProducts_HTTP_Call')",
+          "schema": {
+            "items": {
+              "properties": {
+                "productDescription": {
+                  "type": "string"
+                },
+                "productId": {
+                  "type": "string"
+                },
+                "productName": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "productId",
+                "productName",
+                "productDescription"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "runAfter": {
+          "GetProducts_HTTP_Call": [
+            "Succeeded"
+          ]
+        },
+        "type": "ParseJson"
+      },
+      "Response": {
+        "inputs": {
+          "statusCode": 200
+        },
+        "kind": "Http",
+        "runAfter": {
+          "For_each": [
+            "Succeeded"
+          ]
+        },
+        "type": "Response"
+      }
+    },
+    "contentVersion": "1.0.0.0",
+    "outputs": {},
+    "parameters": {
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      }
+    },
+    "triggers": {
+      "manual": {
+        "inputs": {
+          "schema": {}
+        },
+        "kind": "Http",
+        "type": "Request"
+      }
+    }
+  },
+  "parameters": {
+    "$connections": {
+      "value": {
+        "dynamicscrmonline": {
+          "connectionId": "/subscriptions/b68ed859-8021-4876-8179-8dc97208bc2c/resourceGroups/OHServerless-rg/providers/Microsoft.Web/connections/dynamicscrmonline",
+          "connectionName": "dynamicscrmonline",
+          "id": "/subscriptions/b68ed859-8021-4876-8179-8dc97208bc2c/providers/Microsoft.Web/locations/northeurope/managedApis/dynamicscrmonline"
+        },
+        "office365": {
+          "connectionId": "/subscriptions/b68ed859-8021-4876-8179-8dc97208bc2c/resourceGroups/OHServerless-rg/providers/Microsoft.Web/connections/office365",
+          "connectionName": "office365",
+          "id": "/subscriptions/b68ed859-8021-4876-8179-8dc97208bc2c/providers/Microsoft.Web/locations/northeurope/managedApis/office365"
+        }
+      }
+    }
+  }
+}
