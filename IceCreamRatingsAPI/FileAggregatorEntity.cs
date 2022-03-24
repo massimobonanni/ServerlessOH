@@ -8,9 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Ice_Cream_Ratings_API
+namespace BFYOC.Functions
 {
-    internal class FileAggregatorEntity
+    public class FileAggregatorEntity
     {
         private readonly ILogger logger;
 
@@ -23,6 +23,7 @@ namespace Ice_Cream_Ratings_API
 
         public Dictionary<FileType, string> FileUrls { get; set; }
         public EntityStatus Status { get; set; }
+        public string OrchestrationId { get; set; }
 
         public void FileReceived(string fileUrl)
         {
@@ -36,7 +37,9 @@ namespace Ice_Cream_Ratings_API
 
             if (AllFileReceived())
             {
-                // here put the external service request
+                this.OrchestrationId = Entity.Current.StartNewOrchestration(
+                    nameof(FileAggregatorOrchestrator),
+                    FileUrls);
                 this.Status = EntityStatus.Close;
             }
         }

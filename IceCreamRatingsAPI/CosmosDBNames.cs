@@ -8,6 +8,8 @@ namespace BFYOC.Functions
     {
         public const string DatabaseName = "creamteam";
 
-        public const string Collectionname = "ratings";
+        public const string RatingsCollectionName = "ratings";
+
+        public const string OrderBatchesCollectionName = "orderbatches";
     }
 }

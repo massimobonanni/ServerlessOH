@@ -21,11 +21,11 @@ namespace BFYOC.Functions
             string id,
             [CosmosDB(
                 databaseName: CosmosDBNames.DatabaseName,
-                collectionName: CosmosDBNames.Collectionname,
+                collectionName: CosmosDBNames.RatingsCollectionName,
                 ConnectionStringSetting = "CosmosDBConnection")] DocumentClient client,
                 ILogger log)
         {
-            Uri collectionUri = UriFactory.CreateDocumentCollectionUri(CosmosDBNames.DatabaseName, CosmosDBNames.Collectionname);
+            Uri collectionUri = UriFactory.CreateDocumentCollectionUri(CosmosDBNames.DatabaseName, CosmosDBNames.RatingsCollectionName);
 
             IDocumentQuery<CreateRatingItem> query =
                 client.CreateDocumentQuery<CreateRatingItem>(collectionUri,

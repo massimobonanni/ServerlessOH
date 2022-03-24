@@ -28,7 +28,7 @@ namespace BFYOC.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "ratings")] HttpRequest req,
             [CosmosDB(
                 databaseName: CosmosDBNames.DatabaseName,
-                collectionName: CosmosDBNames.Collectionname,
+                collectionName: CosmosDBNames.RatingsCollectionName,
                 ConnectionStringSetting = "CosmosDBConnection" )] DocumentClient client,
             ILogger log)
         {
@@ -39,7 +39,7 @@ namespace BFYOC.Functions
             if (!await this.backEndService.CheckUserId(userId))
                 return new BadRequestObjectResult("I don't know that user");
 
-            Uri collectionUri = UriFactory.CreateDocumentCollectionUri(CosmosDBNames.DatabaseName, CosmosDBNames.Collectionname);
+            Uri collectionUri = UriFactory.CreateDocumentCollectionUri(CosmosDBNames.DatabaseName, CosmosDBNames.RatingsCollectionName);
 
             IDocumentQuery<CreateRatingItem> query = 
                 client.CreateDocumentQuery<CreateRatingItem>(collectionUri)

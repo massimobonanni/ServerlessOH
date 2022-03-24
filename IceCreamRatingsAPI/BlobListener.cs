@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using BFYOC.Functions;
 
 namespace Ice_Cream_Ratings_API
 {

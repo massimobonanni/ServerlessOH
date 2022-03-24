@@ -24,7 +24,7 @@ namespace BFYOC.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "ratings")] HttpRequest req,
             [CosmosDB(
                 databaseName: CosmosDBNames.DatabaseName,
-                collectionName: CosmosDBNames.Collectionname,
+                collectionName: CosmosDBNames.RatingsCollectionName,
                 ConnectionStringSetting = "CosmosDBConnection")] IAsyncCollector<CreateRatingItem> ratingItems,
             ILogger log)
         {
