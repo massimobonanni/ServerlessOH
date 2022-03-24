@@ -2,80 +2,7 @@
   "definition": {
     "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
     "actions": {
-      "For_each": {
-        "actions": {
-          "Send_an_email_(V2)": {
-            "inputs": {
-              "body": {
-                "Body": "<p>@{variables('EmailHTMLBody')}</p>",
-                "Subject": "TEST OH SERVERLESS PRODUCT LIST",
-                "To": "@items('For_each')?['emailaddress1']"
-              },
-              "host": {
-                "connection": {
-                  "name": "@parameters('$connections')['office365']['connectionId']"
-                }
-              },
-              "method": "post",
-              "path": "/v2/Mail"
-            },
-            "runAfter": {},
-            "type": "ApiConnection"
-          }
-        },
-        "foreach": "@body('List_records_(deprecated)')?['value']",
-        "runAfter": {
-          "Initialize_variable_2": [
-            "Succeeded"
-          ]
-        },
-        "type": "Foreach"
-      },
-      "GetProducts_HTTP_Call": {
-        "inputs": {
-          "method": "GET",
-          "uri": "https://serverlessohapi.azurewebsites.net/api/GetProducts"
-        },
-        "runAfter": {
-          "Initialize_InnerHTMLTable_variable": [
-            "Succeeded"
-          ]
-        },
-        "type": "Http"
-      },
-      "Initialize_InnerHTMLTable_variable": {
-        "inputs": {
-          "variables": [
-            {
-              "name": "InnerHTMLTable",
-              "type": "string"
-            }
-          ]
-        },
-        "runAfter": {
-          "Initialize_variable": [
-            "Succeeded"
-          ]
-        },
-        "type": "InitializeVariable"
-      },
-      "Initialize_variable": {
-        "inputs": {
-          "variables": [
-            {
-              "name": "Contacts",
-              "type": "array"
-            }
-          ]
-        },
-        "runAfter": {
-          "List_records_(deprecated)": [
-            "Succeeded"
-          ]
-        },
-        "type": "InitializeVariable"
-      },
-      "Initialize_variable_2": {
+      "Create_Email_body": {
         "inputs": {
           "variables": [
             {
@@ -92,39 +19,7 @@
         },
         "type": "InitializeVariable"
       },
-      "Iterate_on_products": {
-        "actions": {
-          "Append_to_string_variable": {
-            "inputs": {
-              "name": "InnerHTMLTable",
-              "value": "<tr><td>@{items('Iterate_on_products')['productName']}</td><td>@{items('Iterate_on_products')['productDescription']}</td><td>@{items('Iterate_on_products')['productId']}</td></tr>"
-            },
-            "runAfter": {},
-            "type": "AppendToStringVariable"
-          }
-        },
-        "foreach": "@body('Parse_JSON')",
-        "runAfter": {
-          "Parse_JSON": [
-            "Succeeded"
-          ]
-        },
-        "type": "Foreach"
-      },
-      "List_records_(deprecated)": {
-        "inputs": {
-          "host": {
-            "connection": {
-              "name": "@parameters('$connections')['dynamicscrmonline']['connectionId']"
-            }
-          },
-          "method": "get",
-          "path": "/datasets/@{encodeURIComponent(encodeURIComponent('org01c23854.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('contacts'))}/items"
-        },
-        "runAfter": {},
-        "type": "ApiConnection"
-      },
-      "Parse_JSON": {
+      "Create_array_of_products_from_JSON": {
         "inputs": {
           "content": "@body('GetProducts_HTTP_Call')",
           "schema": {
@@ -157,13 +52,102 @@
         },
         "type": "ParseJson"
       },
+      "GetProducts_HTTP_Call": {
+        "inputs": {
+          "method": "GET",
+          "uri": "https://serverlessohapi.azurewebsites.net/api/GetProducts"
+        },
+        "runAfter": {
+          "Initialize_InnerHTMLTable_variable": [
+            "Succeeded"
+          ]
+        },
+        "type": "Http"
+      },
+      "Get_Contacts_from_Dynamics": {
+        "inputs": {
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['dynamicscrmonline']['connectionId']"
+            }
+          },
+          "method": "get",
+          "path": "/datasets/@{encodeURIComponent(encodeURIComponent('org01c23854.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('contacts'))}/items"
+        },
+        "runAfter": {},
+        "type": "ApiConnection"
+      },
+      "Initialize_InnerHTMLTable_variable": {
+        "inputs": {
+          "variables": [
+            {
+              "name": "InnerHTMLTable",
+              "type": "string"
+            }
+          ]
+        },
+        "runAfter": {
+          "Get_Contacts_from_Dynamics": [
+            "Succeeded"
+          ]
+        },
+        "type": "InitializeVariable"
+      },
+      "Iterate_on_Contacts": {
+        "actions": {
+          "Send_an_email_(V2)": {
+            "inputs": {
+              "body": {
+                "Body": "<p>@{variables('EmailHTMLBody')}</p>",
+                "Subject": "TEST OH SERVERLESS PRODUCT LIST",
+                "To": "@items('Iterate_on_Contacts')?['emailaddress1']"
+              },
+              "host": {
+                "connection": {
+                  "name": "@parameters('$connections')['office365']['connectionId']"
+                }
+              },
+              "method": "post",
+              "path": "/v2/Mail"
+            },
+            "runAfter": {},
+            "type": "ApiConnection"
+          }
+        },
+        "foreach": "@body('Get_Contacts_from_Dynamics')?['value']",
+        "runAfter": {
+          "Create_Email_body": [
+            "Succeeded"
+          ]
+        },
+        "type": "Foreach"
+      },
+      "Iterate_on_products": {
+        "actions": {
+          "Append_table_row_to_InnerHTMLTable_variable": {
+            "inputs": {
+              "name": "InnerHTMLTable",
+              "value": "<tr><td>@{items('Iterate_on_products')['productName']}</td><td>@{items('Iterate_on_products')['productDescription']}</td><td>@{items('Iterate_on_products')['productId']}</td></tr>"
+            },
+            "runAfter": {},
+            "type": "AppendToStringVariable"
+          }
+        },
+        "foreach": "@body('Create_array_of_products_from_JSON')",
+        "runAfter": {
+          "Create_array_of_products_from_JSON": [
+            "Succeeded"
+          ]
+        },
+        "type": "Foreach"
+      },
       "Response": {
         "inputs": {
           "statusCode": 200
         },
         "kind": "Http",
         "runAfter": {
-          "For_each": [
+          "Iterate_on_Contacts": [
             "Succeeded"
           ]
         },
