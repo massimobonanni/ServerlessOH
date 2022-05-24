@@ -11,24 +11,28 @@ using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
 using System.Linq;
 using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 
 namespace BFYOC.Functions
 {
     public class GetRatings
     {
         private readonly IBackEndService backEndService;
-
-        public GetRatings(IBackEndService service)
+        private readonly IConfiguration configuration;
+        
+        public GetRatings(IBackEndService service,
+            IConfiguration configuration)
         {
             this.backEndService = service;
+            this.configuration = configuration;
         }
 
         [FunctionName("GetRatings")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "ratings")] HttpRequest req,
             [CosmosDB(
-                databaseName: CosmosDBNames.DatabaseName,
-                collectionName: CosmosDBNames.RatingsCollectionName,
+                databaseName: "%DatabaseName%",
+                collectionName: "%CollectionName%",
                 ConnectionStringSetting = "CosmosDBConnection" )] DocumentClient client,
             ILogger log)
         {
@@ -39,7 +43,10 @@ namespace BFYOC.Functions
             if (!await this.backEndService.CheckUserId(userId))
                 return new BadRequestObjectResult("I don't know that user");
 
-            Uri collectionUri = UriFactory.CreateDocumentCollectionUri(CosmosDBNames.DatabaseName, CosmosDBNames.RatingsCollectionName);
+            var databaseName = this.configuration["DatabaseName"];
+            var collectionName = this.configuration["CollectionName"];
+            
+            Uri collectionUri = UriFactory.CreateDocumentCollectionUri(databaseName, collectionName);
 
             IDocumentQuery<CreateRatingItem> query = 
                 client.CreateDocumentQuery<CreateRatingItem>(collectionUri)

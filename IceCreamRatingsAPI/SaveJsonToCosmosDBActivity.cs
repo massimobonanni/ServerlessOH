@@ -6,6 +6,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Host;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using static BFYOC.Functions.FileAggregatorEntity;
 
@@ -13,12 +14,12 @@ namespace BFYOC.Functions
 {
     public class SaveJsonToCosmosDBActivity
     {
-
+        
         [FunctionName(nameof(SaveJsonToCosmosDBActivity))]
         public async Task Run([ActivityTrigger] IEnumerable<OrderBatch> orders,
             [CosmosDB(
-                databaseName: CosmosDBNames.DatabaseName,
-                collectionName: CosmosDBNames.OrderBatchesCollectionName,
+                databaseName: "%DatabaseName%",
+                collectionName: "%OrderBatchesCollectionName%",
                 ConnectionStringSetting = "CosmosDBConnection")] IAsyncCollector<OrderBatch> orderBatchesItems,
             ILogger log)
         {

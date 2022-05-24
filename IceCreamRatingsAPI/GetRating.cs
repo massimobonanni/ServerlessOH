@@ -11,21 +11,33 @@ using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
 using System.Linq;
 using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
+
 namespace BFYOC.Functions
 {
-    public static class GetRating
+    public class GetRating
     {
+        private readonly IConfiguration configuration;
+
+        public GetRating(IConfiguration configuration)
+        {
+            this.configuration = configuration;
+        }
+
         [FunctionName("GetRating")]
-        public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get",  Route = "ratings/{id}")] HttpRequest req,
+        public async Task<IActionResult> Run(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "ratings/{id}")] HttpRequest req,
             string id,
             [CosmosDB(
-                databaseName: CosmosDBNames.DatabaseName,
-                collectionName: CosmosDBNames.RatingsCollectionName,
+                databaseName: "%DatabaseName%",
+                collectionName: "%CollectionName%",
                 ConnectionStringSetting = "CosmosDBConnection")] DocumentClient client,
                 ILogger log)
         {
-            Uri collectionUri = UriFactory.CreateDocumentCollectionUri(CosmosDBNames.DatabaseName, CosmosDBNames.RatingsCollectionName);
+            var databaseName = this.configuration["DatabaseName"];
+            var collectionName = this.configuration["CollectionName"];
+
+            Uri collectionUri = UriFactory.CreateDocumentCollectionUri(databaseName, collectionName);
 
             IDocumentQuery<CreateRatingItem> query =
                 client.CreateDocumentQuery<CreateRatingItem>(collectionUri,
